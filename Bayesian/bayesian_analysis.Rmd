@@ -1,0 +1,281 @@
+---
+title: "Bayesian Analysis of Video Game Ratings"
+author: "Kaan and Hanfu"
+date: "12-1-2025"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width = 10, fig.height = 6)
+
+library(brms)
+library(ggplot2)
+library(tidybayes)
+
+# Load the fitted model (already trained in bayesian_model.R)
+bayes_model <- readRDS("bayesian_model.rds")
+feature_importance <- read.csv("feature_importance.csv")
+
+# Load data for predictions
+df <- read.csv("Video_Games_Sales_preprocessing.csv")
+target_col <- "User_Rating"
+cat_cols <- c("Platform", "Genre", "Rating")
+num_cols <- c("Year_of_Release", "Critic_Score", "Critic_Count", 
+              "User_Score_Clean", "User_Count",
+              "NA_Sales", "EU_Sales", "JP_Sales", "Other_Sales", "Global_Sales")
+needed_cols <- c(target_col, cat_cols, num_cols)
+
+df_clean <- df[needed_cols]
+df_clean <- df_clean[complete.cases(df_clean), ]
+for (col in num_cols) {
+  df_clean <- df_clean[is.finite(df_clean[[col]]), ]
+}
+
+df_clean$Platform <- as.factor(df_clean$Platform)
+df_clean$Genre <- as.factor(df_clean$Genre)
+df_clean$Rating <- as.factor(df_clean$Rating)
+
+for (col in num_cols) {
+  scaled_col <- paste0(col, "_scaled")
+  df_clean[[scaled_col]] <- scale(df_clean[[col]])[,1]
+}
+
+set.seed(42)
+n <- nrow(df_clean)
+train_idx <- sample(1:n, size = floor(0.8 * n))
+val_idx <- setdiff(1:n, train_idx)
+train_data <- df_clean[train_idx, ]
+val_data <- df_clean[val_idx, ]
+
+# Recreate grouped variables
+platform_counts <- table(train_data$Platform)
+major_platforms <- names(platform_counts[platform_counts >= 100])
+train_data$Platform_grouped <- ifelse(train_data$Platform %in% major_platforms, 
+                                       as.character(train_data$Platform), "Other")
+val_data$Platform_grouped <- ifelse(val_data$Platform %in% major_platforms,
+                                     as.character(val_data$Platform), "Other")
+
+genre_counts <- table(train_data$Genre)
+major_genres <- names(genre_counts[genre_counts >= 100])
+train_data$Genre_grouped <- ifelse(train_data$Genre %in% major_genres,
+                                    as.character(train_data$Genre), "Other")
+val_data$Genre_grouped <- ifelse(val_data$Genre %in% major_genres,
+                                  as.character(val_data$Genre), "Other")
+
+train_data$Platform_grouped <- as.factor(train_data$Platform_grouped)
+train_data$Genre_grouped <- as.factor(train_data$Genre_grouped)
+val_data$Platform_grouped <- as.factor(val_data$Platform_grouped)
+val_data$Genre_grouped <- as.factor(val_data$Genre_grouped)
+
+# Get predictions
+val_predictions <- predict(bayes_model, newdata = val_data)
+val_pred_mean <- val_predictions[, "Estimate"]
+val_true <- val_data$User_Rating
+```
+
+## Introduction
+
+This analysis uses Bayesian regression to predict video game user ratings. Unlike traditional approaches, Bayesian methods provide uncertainty estimates for every prediction, making them particularly useful for understanding confidence in model outputs.
+
+The Bayesian model complements Hanfu's approach on the neural network by giving us some more interpretability and uncertainty quantification that neural networks usually don't have.
+
+## Model Specification
+
+I fit our Bayesian linear regression model predicting User_Rating (0-100 scale) using:
+
+**Features:**
+- Platform (grouped to major platforms)
+
+- Genre (grouped to major genres)  
+
+- ESRB Rating
+
+- Year of Release
+
+- Critic Score
+
+- User Count
+
+- Global Sales
+
+**Note:** We excluded User_Score_Clean (the 0-10 version of our target) to avoid circular prediction
+
+**Priors:**
+- Intercept: Normal(70, 20) - ratings typically 60-80 is my reasoning
+
+- Coefficients: Normal(0, 5) - weakly informative
+
+- Residual SD: Student-t(3, 0, 10) - resists outliers
+
+## Model Convergence
+```{r convergence}
+# Check R-hat values
+model_summary <- summary(bayes_model)
+rhat_values <- model_summary$fixed[, "Rhat"]
+
+cat("Max R-hat:", max(rhat_values))
+cat("All R-hat < 1.01:", all(rhat_values < 1.01))
+
+# benchmark of whether it converges for printout
+if (max(rhat_values) < 1.01) {
+  cat("great convergence! all chains mixed well")
+} else {
+  cat("Need to check individual parameters")
+}
+```
+
+R-hat values near 1.00 indicate all MCMC chains converged to the same posterior distribution, meaning our results are reliable.
+
+## Performance Metrics
+```{r performance}
+val_mse <- mean((val_pred_mean - val_true)^2)
+val_rmse <- sqrt(val_mse)
+val_mae <- mean(abs(val_pred_mean - val_true))
+
+baseline_pred <- mean(train_data$User_Rating)
+baseline_mse <- mean((val_true - baseline_pred)^2)
+baseline_rmse <- sqrt(baseline_mse)
+
+improvement <- (1 - val_rmse/baseline_rmse) * 100
+
+results_df <- data.frame(
+  Metric = c("RMSE", "MAE", "Baseline RMSE", "Improvement"),
+  Value = c(val_rmse, val_mae, baseline_rmse, improvement)
+)
+
+knitr::kable(results_df, caption = "Model Performance on Validation Set")
+```
+
+The Bayesian model has an RMSE of 10.9, which is a 25.9% improvement over the baseline (predicting the mean).
+
+## Predicted vs Actual
+```{r pred_vs_actual, fig.height=6, fig.width=8}
+ggplot(data.frame(true = val_true, pred = val_pred_mean), 
+       aes(x = true, y = pred)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed", size = 1) +
+  labs(
+    title = "Predicted vs Actual User Ratings",
+    x = "True Rating",
+    y = "Predicted Rating"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Points cluster reasonably around the diagonal (perfect predictions), with more scatter at the extremes. The model seems to predict toward the mean for very high and very low ratings.
+
+## Residual Analysis
+```{r residuals, fig.height=6, fig.width=8}
+residuals <- val_true - val_pred_mean
+
+ggplot(data.frame(pred = val_pred_mean, resid = residuals),
+       aes(x = pred, y = resid)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed", size = 1) +
+  labs(
+    title = "Residual Plot",
+    x = "Predicted Rating",
+    y = "Residuals"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Residuals are centered around zero with no obvious patterns, suggesting the model assumptions are reasonable. One thing to note though is we do have a bit of heteroscedasticity (variance changes with predicted value) but not severe, more residuals on the positive end than negative it seems.
+
+## Feature Importance
+```{r feature_importance, fig.height=8, fig.width=10}
+top15 <- head(feature_importance, 15)
+top15$feature <- factor(top15$feature, levels = rev(top15$feature))
+
+ggplot(top15, aes(x = feature, y = mean)) +
+  geom_point(size = 3, color = "steelblue") +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  coord_flip() +
+  labs(
+    title = "Top 15 Features by Importance",
+    subtitle = "Points show posterior means, bars show 95% credible intervals",
+    x = "",
+    y = "Coefficient Value"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+**Key findings out of the bunch:**
+
+1. **Critic_Score** (+9.05) - By far the strongest predictor. Higher critic scores lead to higher user ratings.
+2. **Genre_Sports** (-4.69) - Sports games consistently rated lower by users.
+3. **Platform effects** - PS2 (+2.65) rated higher, while PC (-4.34) and Xbox One (-3.56) rated lower.
+4. **Year_of_Release** (-2.32) - Older games rated higher (I believe survivorship bias - bad old games forgotten in more recent reviews).
+
+Error bars show 95% credible intervals. Features where the interval doesn't cross zero are "significant" predictors.
+
+## Uncertainty Quantification
+```{r uncertainty, fig.height=6, fig.width=10}
+set.seed(123)
+sample_idx <- sample(1:nrow(val_data), 50)
+val_sample <- val_data[sample_idx, ]
+pred_sample <- predict(bayes_model, newdata = val_sample)
+
+plot_data <- data.frame(
+  true = val_sample$User_Rating,
+  pred = pred_sample[, "Estimate"],
+  lower = pred_sample[, "Q2.5"],
+  upper = pred_sample[, "Q97.5"],
+  index = 1:50
+)
+
+ggplot(plot_data, aes(x = index)) +
+  geom_point(aes(y = true, color = "True"), size = 2) +
+  geom_point(aes(y = pred, color = "Predicted"), size = 2) +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.3, alpha = 0.3) +
+  scale_color_manual(values = c("True" = "blue", "Predicted" = "red")) +
+  labs(
+    title = "Prediction Uncertainty (Sample of 50 Games)",
+    subtitle = "Error bars show 95% credible intervals",
+    x = "Game Index",
+    y = "User Rating",
+    color = ""
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5),
+        legend.position = "bottom")
+```
+
+This plot shows the Bayesian model's unique advantage: uncertainty quantification. For each prediction (red), we get a 95% credible interval (gray bars) representing our confidence. Most true values (blue) fall within these intervals, indicating well-calibrated uncertainty estimates for the most part, out of the 50, only 2 true values almost out of or not in the intervals.
+
+## Conclusions
+
+The Bayesian regression model successfully predicts game ratings with:
+
+- RMSE of 10.9 (26% improvement over baseline)
+
+- Amazing convergence (all R-hat < 1.01)
+
+- Clear feature interpretability
+
+- Well-calibrated uncertainty estimates
+
+**Advantages over MLP:**
+
+- Interpretable coefficients (we know WHY predictions are made)
+
+- Uncertainty quantification (not just point estimates)
+
+**Disadvantages:**
+
+- Likely slower to fit in some of my approaches (MCMC vs gradient descent)
+
+- Less flexible with complex interactions
+
+**Future work:**
+
+- Possibly add interaction terms (e.g., Platform × Genre)
+
+- Hierarchical model (varying effects by platform/genre)
+
+- Compare with MLP on same feature set
