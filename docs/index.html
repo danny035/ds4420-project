@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Rating Prediction | DS 4420 Project</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">Game Rating Prediction</div>
+            <div class="nav-links">
+                <a href="index.html" class="active">Home</a>
+                <a href="results.html">Results</a>
+                <a href="https://github.com/Danny035/DS4420-Project" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1 class="hero-title">Predicting Video Game Ratings with Machine Learning</h1>
+            <p class="hero-subtitle">Comparing Wide & Deep Neural Networks with Bayesian Regression</p>
+            <div class="hero-meta">
+                <span>DS 4420: Machine Learning 2</span>
+                <span>•</span>
+                <span>Fall 2025</span>
+                <span>•</span>
+                <span>Northeastern University</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">10.6</div>
+                        <div class="metric-label">MLP RMSE</div>
+                        <div class="metric-sub">28% improvement</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">10.9</div>
+                        <div class="metric-label">Bayesian RMSE</div>
+                        <div class="metric-sub">26% improvement</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">6,800</div>
+                        <div class="metric-label">Games Analyzed</div>
+                        <div class="metric-sub">Pre-2016 releases</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section bg-light">
+            <div class="container">
+                <h2 class="section-title">Project Overview</h2>
+                <div class="content-grid">
+                    <div class="content-block">
+                        <h3>The Challenge</h3>
+                        <p>Can we predict how players will rate a video game before it releases? User ratings strongly influence purchasing decisions and funding choices, but they're only available post-launch. We tackle this problem using two complementary machine learning approaches.</p>
+                    </div>
+                    <div class="content-block">
+                        <h3>Our Approach</h3>
+                        <p>We built two models: a <strong>Wide & Deep MLP</strong> for flexible prediction and a <strong>Bayesian regression model</strong> for interpretability. Both achieved ~27% improvement over baseline, validating they captured real patterns in game ratings.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Methods</h2>
+                <div class="methods-grid">
+                    <div class="method-card">
+                        <div class="method-header">
+                            <h3>Wide & Deep MLP</h3>
+                            <span class="badge">Python / NumPy</span>
+                        </div>
+                        <p class="method-description">A manually-implemented neural network inspired by Google's Wide & Deep architecture. The deep path learns smooth, non-linear patterns through hidden layers, while the wide path captures specific Platform × Genre interactions.</p>
+                        <ul class="method-features">
+                            <li><strong>Architecture:</strong> 32 → 16 neurons (deep) + linear (wide)</li>
+                            <li><strong>Training:</strong> Mini-batch gradient descent, L2 regularization</li>
+                            <li><strong>Implementation:</strong> Manual backpropagation from scratch</li>
+                            <li><strong>Performance:</strong> 10.6 RMSE (28% improvement)</li>
+                        </ul>
+                    </div>
+                    <div class="method-card">
+                        <div class="method-header">
+                            <h3>Bayesian Regression</h3>
+                            <span class="badge">R / brms</span>
+                        </div>
+                        <p class="method-description">A probabilistic linear model using MCMC inference to provide interpretable coefficients with uncertainty quantification. Reveals which features most strongly predict ratings.</p>
+                        <ul class="method-features">
+                            <li><strong>Inference:</strong> MCMC with 4 chains, 2000 iterations</li>
+                            <li><strong>Priors:</strong> Weakly informative (Normal, Student-t)</li>
+                            <li><strong>Advantage:</strong> Interpretable coefficients + uncertainty</li>
+                            <li><strong>Performance:</strong> 10.9 RMSE (26% improvement)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section bg-light">
+            <div class="container">
+                <h2 class="section-title">Key Findings</h2>
+                <div class="findings-list">
+                    <div class="finding-item">
+                        <div class="finding-icon">1</div>
+                        <div class="finding-content">
+                            <h4>Critic Score Dominates</h4>
+                            <p>Critic score is by far the strongest predictor, adding ~9 points per standard deviation increase. Professional reviews strongly correlate with user satisfaction.</p>
+                        </div>
+                    </div>
+                    <div class="finding-item">
+                        <div class="finding-icon">2</div>
+                        <div class="finding-content">
+                            <h4>Genre & Platform Matter</h4>
+                            <p>Sports games are rated 4.7 points lower on average. PS2 games show a positive effect (+2.7), while PC games trend lower (-4.3).</p>
+                        </div>
+                    </div>
+                    <div class="finding-item">
+                        <div class="finding-icon">3</div>
+                        <div class="finding-content">
+                            <h4>Similar Model Performance</h4>
+                            <p>Both models achieved ~27% improvement, suggesting the relationship between features and ratings is largely linear with some valuable non-linear interactions.</p>
+                        </div>
+                    </div>
+                    <div class="finding-item">
+                        <div class="finding-icon">4</div>
+                        <div class="finding-content">
+                            <h4>Survivorship Bias</h4>
+                            <p>Older games show higher ratings (-2.3 points per year newer), likely because only highly-rated older games remain popular enough to be reviewed.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">Dataset</h2>
+                <div class="dataset-info">
+                    <p><strong>Source:</strong> <a href="https://www.kaggle.com/datasets/rush4ratio/video-game-sales-with-ratings" target="_blank">Video Game Sales with Ratings</a> (Kaggle)</p>
+                    <div class="dataset-grid">
+                        <div class="dataset-stat">
+                            <strong>6,800</strong>
+                            <span>Games</span>
+                        </div>
+                        <div class="dataset-stat">
+                            <strong>9</strong>
+                            <span>Numeric Features</span>
+                        </div>
+                        <div class="dataset-stat">
+                            <strong>3</strong>
+                            <span>Categorical Features</span>
+                        </div>
+                        <div class="dataset-stat">
+                            <strong>80/20</strong>
+                            <span>Train/Val Split</span>
+                        </div>
+                    </div>
+                    <div class="features-list">
+                        <div class="feature-group">
+                            <h4>Numeric Features</h4>
+                            <p>Year of Release, Critic Score, Critic Count, User Count, NA/EU/JP/Other/Global Sales</p>
+                        </div>
+                        <div class="feature-group">
+                            <h4>Categorical Features</h4>
+                            <p>Platform (PS2, Xbox, PC, etc.), Genre (Action, RPG, Sports, etc.), ESRB Rating (E, T, M, etc.)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section cta-section">
+            <div class="container">
+                <h2 class="section-title">Explore the Results</h2>
+                <p class="cta-text">See interactive visualizations of our model predictions and feature importance analysis.</p>
+                <a href="results.html" class="btn-primary">View Interactive Results →</a>
+            </div>
+        </section>
+
+        <section class="section bg-light">
+            <div class="container">
+                <h2 class="section-title">Team</h2>
+                <div class="team-grid">
+                    <div class="team-member">
+                        <h4>Kaan Tural</h4>
+                        <p>Bayesian Model & Analysis</p>
+                        <a href="mailto:tural.k@northeastern.edu">tural.k@northeastern.edu</a>
+                    </div>
+                    <div class="team-member">
+                        <h4>Hanfu Yao</h4>
+                        <p>Wide & Deep MLP Implementation</p>
+                        <a href="mailto:yao.hanf@northeastern.edu">yao.hanf@northeastern.edu</a>
+                    </div>
+                </div>
+                <div class="course-info">
+                    <p><strong>Course:</strong> DS 4420 - Machine Learning and Data Mining 2</p>
+                    <p><strong>Instructor:</strong> Professor Eric Gerber</p>
+                    <p><strong>Institution:</strong> Northeastern University, Fall 2025</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Kaan Tural & Hanfu Yao | DS 4420 Project | Northeastern University</p>
+            <p><a href="https://github.com/Danny035/DS4420-Project" target="_blank">View on GitHub</a></p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
