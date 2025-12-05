@@ -1,149 +1,160 @@
 # Game Rating Prediction System
 
 **DS 4420: Machine Learning and Data Mining 2 - Fall 2025**  
-**Professor:** Eric Gerber
+**Professor:** Eric Gerber  
+**Northeastern University**
 
-## Team Members
+**Team Members:**
 - Kaan Tural - tural.k@northeastern.edu
 - Hanfu Yao - yao.hanf@northeastern.edu
 
+---
+
 ## Project Overview
 
-This project tackles the problem of predicting video game ratings using machine learning. We're building two complementary models: a neural network (MLP) for prediction and a Bayesian model for understanding feature importance. The goal is to help game publishers estimate market reception before release, assist digital storefronts in identifying quality titles, and provide indie developers with data-driven design feedback.
+This project predicts video game user ratings using two complementary machine learning approaches: a manually-implemented Wide & Deep neural network and a Bayesian regression model. We compare these methods on a dataset of ~6,800 games to understand which features most strongly influence player satisfaction.
 
-### Research Questions
+**Key Results:**
+- Wide & Deep MLP: **10.6 RMSE** (28% improvement over baseline)
+- Bayesian Regression: **10.9 RMSE** (26% improvement over baseline)
+- Most important feature: Critic Score (+9.05 points per standard deviation)
 
-**Prediction (MLP):**
-- Can we predict how well a new game will score before it releases?
-- What combination of features (genre, platform, art style, etc.) best predicts ratings?
-
-**Understanding (Bayesian Modeling):**
-- Which game features are most strongly associated with higher or lower ratings?
-- Do certain genres or platforms consistently lead to better reception?
-- How does review sentiment relate to numerical ratings?
-- Does release timing matter?
+---
 
 ## Dataset
 
-**Source:** [Video Game Reviews and Ratings - Kaggle](https://www.kaggle.com/datasets/jahnavipaliwal/video-game-reviews-and-ratings/data)
+**Source:** [Video Game Sales with Ratings](https://www.kaggle.com/datasets/rush4ratio/video-game-sales-with-ratings) (Kaggle)
 
 The dataset includes:
-- Game metadata (title, genre, platform, release year)
-- User ratings
-- Review text and sentiment
-- Various other game attributes
+- ~6,800 video games released before 2016
+- Platform (PS2, Xbox, PC, etc.)
+- Genre (Action, RPG, Sports, etc.)
+- ESRB Rating (E, T, M, etc.)
+- Critic scores and review counts
+- User ratings (0-10 scale, rescaled to 0-100)
+- Regional and global sales figures
+
+---
 
 ## Methods
 
-### 1. Neural Network (MLP) - Python
-- **Architecture:** Wide & Deep inspired model
-- **Purpose:** Predict game ratings from metadata
-- **Implementation:** Manual (NumPy-based), no pre-built modeling packages
-- **Features:** Genre, platform, release year, review sentiment, etc.
+### Wide & Deep MLP (Python/NumPy)
+A manually-implemented neural network inspired by Google's Wide & Deep architecture. The **deep path** learns smooth, non-linear patterns through two hidden layers (32 → 16 neurons), while the **wide path** directly captures specific Platform × Genre interactions using a linear layer.
 
-### 2. Bayesian Modeling - R
-- **Purpose:** Understand feature importance and uncertainty
-- **Implementation:** Using R's Bayesian libraries
-- **Focus:** Identifying which features most strongly predict ratings
+**Implementation:** Manual backpropagation with mini-batch gradient descent, L2 regularization, and ReLU activations. No high-level frameworks (PyTorch/TensorFlow) used.
+
+### Bayesian Regression (R/brms)
+A probabilistic linear model using MCMC inference to provide interpretable coefficients with uncertainty quantification. Features were grouped (rare platforms/genres → "Other") to ensure convergence.
+
+**Implementation:** brms/Stan with weakly informative priors and 4-chain MCMC sampling.
+
+---
 
 ## Project Structure
 ```
 game-rating-prediction/
-├── README.md
-├── data/
-│   ├── raw/                  # Original dataset
-│   └── processed/            # Cleaned and preprocessed data
-├── src/
-│   ├── python/
-│   │   ├── data_preprocessing.py
-│   │   ├── mlp_model.py      # Manual MLP implementation
-│   │   ├── train.py
-│   │   └── evaluate.py
-│   └── r/
-│       ├── data_preprocessing.R
-│       ├── bayesian_model.R
-│       └── analysis.R
-├── notebooks/
-│   ├── exploratory_analysis.ipynb
-│   └── results_visualization.ipynb
-├── results/
-│   ├── figures/
-│   └── metrics/
-├── reports/
-│   ├── literature_review.pdf
-│   ├── final_report.pdf
-│   └── poster.pdf
-└── requirements.txt
+├── Bayesian/
+│   ├── bayesian_model.R              # Main Bayesian model training script
+│   ├── bayesian_analysis.Rmd         # Analysis and visualization notebook
+│   ├── bayesian_analysis.html        # Rendered analysis report
+│   ├── bayesian_model.rds            # Saved trained model
+│   ├── feature_importance.csv        # Extracted coefficients
+│   └── Video_Games_Sales_preprocessing.csv
+├── MLP/
+│   ├── DS4420_MLP.ipynb              # Wide & Deep model implementation
+│   ├── DS4420 Final Project EDA (2).ipynb  # Exploratory data analysis
+│   ├── Video_Games_Sales_as_at_22_Dec_2016.csv
+│   └── Video_Games_Sales_preprocessing.csv
+├── Reports/
+│   ├── DS4420_Project_Phase1 (1).pdf # Literature review
+│   └── Game Recommandation.pdf       # Final poster
+├── .gitignore
+└── README.md
 ```
+
+---
 
 ## Setup & Installation
 
-### Python Environment
+### Python Requirements
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+pip install numpy pandas matplotlib seaborn jupyter
 ```
 
-### R Environment
+### R Requirements
 ```R
-# Install required packages
-install.packages(c("tidyverse", "caret", "rstan", "bayesplot"))
+install.packages(c("brms", "tidyverse", "ggplot2"))
 ```
 
-## Current Status
-
-- [x] Team formed and registered
-- [x] Dataset identified and downloaded
-- [x] Literature review completed
-- [ ] Data preprocessing pipeline
-- [ ] MLP model implementation
-- [ ] Bayesian model implementation
-- [ ] Model evaluation and comparison
-- [ ] Final report and poster
-
-## Timeline
-
-| Milestone | Due Date |
-|-----------|----------|
-| Phase I: Literature Review + GitHub Setup | Nov 7, 2025 |
-| Project Check-In | Week of Nov 17, 2025 |
-| Final Report & Poster | Dec 4, 2025 |
-
-## Key References
-
-1. **Cheng et al. (2016)** - "Wide & Deep Learning for Recommender Systems" - Neural network architecture for recommendations
-2. **Hasan et al. (2024)** - "Review-Based Recommender Systems" - Survey of review-based approaches
-3. **Lim & Teh (2007)** - "Variational Bayesian Approach to Movie Rating Prediction" - Bayesian methods for ratings
-4. **Sifa et al. (2021)** - "Large-Scale Cross-Game Player Behavior Analysis on Steam" - Understanding game success metrics
-
-Full bibliography available in `reports/literature_review.pdf`
+---
 
 ## Usage
 
-*(To be updated as implementation progresses)*
+### Running the MLP
+1. Open `MLP/DS4420_MLP.ipynb` in Jupyter Notebook or JupyterLab
+2. Select "Run All" to execute the complete pipeline:
+   - Data preprocessing and standardization
+   - Wide & Deep model training (200 epochs)
+   - Validation performance evaluation
+   - Results visualization
 
-### Training the MLP
-```python
-python src/python/train.py --data data/processed/train.csv --epochs 100
-```
-
-### Running Bayesian Analysis
+### Running the Bayesian Model
+1. Open RStudio or R console
+2. Set working directory: `setwd("Bayesian/")`
+3. Run the main script:
 ```R
-source("src/r/bayesian_model.R")
+   source("bayesian_model.R")
 ```
+4. For full analysis with visualizations, knit `bayesian_analysis.Rmd`
 
-## Results
+---
 
-*(To be updated with final results)*
+## Key Results
+
+### Performance Comparison
+
+| Model | RMSE | Improvement |
+|-------|------|-------------|
+| Baseline (mean) | 14.7 | --- |
+| Wide & Deep MLP | 10.6 | 28% |
+| Bayesian Regression | 10.9 | 26% |
+
+### Most Important Features (Bayesian Model)
+
+1. **Critic Score** (+9.05): Strongest predictor by far
+2. **Genre: Sports** (-4.69): Sports games rated lower
+3. **Platform: PC** (-4.34): PC games rated lower on average
+4. **Platform: PS2** (+2.65): PS2 games rated higher
+5. **Year of Release** (-2.32): Older games rated higher (possible survivorship bias)
+
+---
+
+## Key Findings
+
+Both models achieved similar predictive performance (~27% improvement over baseline), validating that they captured real patterns in the data. The Bayesian model provided additional interpretability through coefficient estimates and uncertainty quantification, while the MLP offered flexibility to capture non-linear interactions through its deep architecture.
+
+The close performance between models suggests that the relationship between features and ratings is largely linear, with the MLP's deep architecture providing marginal gains through non-linear interactions captured in the wide path's cross-features.
+
+---
+
+## References
+
+1. Cheng, H. T., et al. (2016). "Wide & Deep Learning for Recommender Systems." *Proceedings of the 1st Workshop on Deep Learning for Recommender Systems*.
+2. Lim, Y. J., & Teh, Y. W. (2007). "Variational Bayesian Approach to Movie Rating Prediction." *Proceedings of KDD Cup and Workshop*.
+3. Sifa, R., et al. (2021). "Large-Scale Cross-Game Player Behavior Analysis on Steam." *IEEE Transactions on Games*.
+
+Full bibliography available in `Reports/DS4420_Project_Phase1 (1).pdf`
+
+---
+
+## Notes
+
+- The preprocessed datasets are identical between MLP and Bayesian folders for reproducibility
+- Training the Bayesian model takes ~5-10 minutes on a standard laptop
+- The MLP trains in ~2-3 minutes with mini-batch gradient descent
+
+---
 
 ## License
 
-This project is for educational purposes as part of DS 4420 at Northeastern University.
-
-## Contact
-
-For questions or collaboration inquiries, please contact the team members listed above.
+This project was completed for educational purposes as part of DS 4420 at Northeastern University, Fall 2025.
