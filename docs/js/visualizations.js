@@ -18,11 +18,8 @@ async function loadPredictionData() {
             throw new Error('Failed to load predictions.json');
         }
         predictionData = await response.json();
-        console.log(`✓ Loaded ${predictionData.length} real predictions`);
         return predictionData;
     } catch (error) {
-        console.error('Error loading predictions:', error);
-        console.log('⚠ Falling back to synthetic data');
         // Fallback to synthetic data if JSON loading fails
         return generateSampleData(200);
     }
@@ -170,7 +167,6 @@ function createScatterPlot(modelType) {
             sum + Math.pow(pred - actualValues[i], 2), 0
         ) / predictedValues.length
     );
-    console.log(`${modelType.toUpperCase()} RMSE from chart data: ${rmse.toFixed(2)}`);
 }
 
 // ===================================
