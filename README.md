@@ -21,6 +21,18 @@ This project predicts video game user ratings using two complementary machine le
 
 ---
 
+## Interactive Website
+
+**Live Demo:** https://danny035.github.io/DS4420-Project/
+
+Explore our results through an interactive website featuring:
+- Project overview and methodology
+- Real-time visualization toggles between MLP and Bayesian predictions
+- Interactive scatter plots with 1,363 validation predictions
+- Feature importance analysis with Chart.js visualizations
+
+---
+
 ## Dataset
 
 **Source:** [Video Game Sales with Ratings](https://www.kaggle.com/datasets/rush4ratio/video-game-sales-with-ratings) (Kaggle)
@@ -51,23 +63,39 @@ A probabilistic linear model using MCMC inference to provide interpretable coeff
 ---
 
 ## Project Structure
+
 ```
 game-rating-prediction/
 ├── Bayesian/
-│   ├── bayesian_model.R              # Main Bayesian model training script
-│   ├── bayesian_analysis.Rmd         # Analysis and visualization notebook
-│   ├── bayesian_analysis.html        # Rendered analysis report
-│   ├── bayesian_model.rds            # Saved trained model
-│   ├── feature_importance.csv        # Extracted coefficients
+│   ├── bayesian_model.R                    # Main Bayesian model training script
+│   ├── bayesian_analysis.Rmd               # Analysis and visualization notebook
+│   ├── bayesian_analysis.html              # Rendered analysis report
+│   ├── bayesian_model.rds                  # Saved trained model
+│   ├── feature_importance.csv              # Extracted coefficients
+│   ├── Real_Data_Extractor_Bayes.R         # Export predictions for website
 │   └── Video_Games_Sales_preprocessing.csv
 ├── MLP/
-│   ├── DS4420_MLP.ipynb              # Wide & Deep model implementation
+│   ├── DS4420_MLP.ipynb                    # Wide & Deep model implementation
 │   ├── DS4420 Final Project EDA (2).ipynb  # Exploratory data analysis
 │   ├── Video_Games_Sales_as_at_22_Dec_2016.csv
 │   └── Video_Games_Sales_preprocessing.csv
 ├── Reports/
-│   ├── DS4420_Project_Phase1 (1).pdf # Literature review
-│   └── Game Recommandation.pdf       # Final poster
+│   ├── DS4420_Project_Phase1 (1).pdf       # Literature review
+│   └── Game Recommandation.pdf             # Final poster
+├── website_utility/
+│   ├── combine_predictions.py              # Merge model predictions to JSON
+│   ├── bayesian_predictions.csv            # Bayesian validation predictions
+│   └── mlp_predictions.csv                 # MLP validation predictions
+├── docs/                                   # GitHub Pages website
+│   ├── index.html                          # Landing page
+│   ├── results.html                        # Interactive results page
+│   ├── css/
+│   │   └── style.css                       # Website styling
+│   ├── js/
+│   │   ├── main.js                         # Homepage interactions
+│   │   └── visualizations.js               # Chart.js visualizations
+│   └── data/
+│       └── predictions.json                # Combined model predictions
 ├── .gitignore
 └── README.md
 ```
@@ -102,9 +130,9 @@ install.packages(c("brms", "tidyverse", "ggplot2"))
 1. Open RStudio or R console
 2. Set working directory: `setwd("Bayesian/")`
 3. Run the main script:
-```R
+   ```R
    source("bayesian_model.R")
-```
+   ```
 4. For full analysis with visualizations, knit `bayesian_analysis.Rmd`
 
 ---
@@ -117,7 +145,7 @@ install.packages(c("brms", "tidyverse", "ggplot2"))
 |-------|------|-------------|
 | Baseline (mean) | 14.7 | --- |
 | Wide & Deep MLP | 10.6 | 28% |
-| Bayesian Regression | 10.9 | 26% |
+| Bayesian Regression | 11.0 | 25% |
 
 ### Most Important Features (Bayesian Model)
 
@@ -125,7 +153,7 @@ install.packages(c("brms", "tidyverse", "ggplot2"))
 2. **Genre: Sports** (-4.69): Sports games rated lower
 3. **Platform: PC** (-4.34): PC games rated lower on average
 4. **Platform: PS2** (+2.65): PS2 games rated higher
-5. **Year of Release** (-2.32): Older games rated higher (possible survivorship bias)
+5. **Year of Release** (-2.32): Older games rated higher (survivorship bias)
 
 ---
 
@@ -152,6 +180,7 @@ Full bibliography available in `Reports/DS4420_Project_Phase1 (1).pdf`
 - The preprocessed datasets are identical between MLP and Bayesian folders for reproducibility
 - Training the Bayesian model takes ~5-10 minutes on a standard laptop
 - The MLP trains in ~2-3 minutes with mini-batch gradient descent
+- Website deployed via GitHub Pages showcases interactive results
 
 ---
 
