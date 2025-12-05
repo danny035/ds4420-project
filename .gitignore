@@ -1,4 +1,68 @@
-.Rproj.user
+# ===================================
+# Python Virtual Environments
+# ===================================
+mlp_env/
+venv/
+env/
+ENV/
+.venv/
+
+# ===================================
+# Python
+# ===================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.pyc
+
+# ===================================
+# Jupyter
+# ===================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# ===================================
+# macOS
+# ===================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===================================
+# Windows
+# ===================================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# ===================================
+# IDE
+# ===================================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ===================================
+# R
+# ===================================
 .Rhistory
 .RData
-.Ruserdata
+.Rproj.user
+*.Rproj
+
+# ===================================
+# Temporary files
+# ===================================
+*.tmp
+*.temp
+*.log
+*.bak
+*~
